@@ -4,7 +4,7 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Client
+namespace ResourceOwnerClient
 {
     class Program
     {
@@ -12,14 +12,14 @@ namespace Client
 
         private static async Task MainAsync()
         {
-            Console.Title = "Client";
+            Console.Title = "Resource Owner Client";
 
             // discover endpoints from metadata
             var disco = await DiscoveryClient.GetAsync("http://localhost:5000");
 
             // request token
-            var tokenClient = new TokenClient(disco.TokenEndpoint, "client", "secret");
-            var tokenResponse = await tokenClient.RequestClientCredentialsAsync("api1");
+            var tokenClient = new TokenClient(disco.TokenEndpoint, "ro.client", "secret");
+            var tokenResponse = await tokenClient.RequestResourceOwnerPasswordAsync("alice", "password", "api1");
 
             if (tokenResponse.IsError)
             {
