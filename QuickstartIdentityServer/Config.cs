@@ -9,6 +9,15 @@ namespace QuickstartIdentityServer
     public class Config
     {
         // scopes define the API resources in your system
+        public static IEnumerable<IdentityResource> GetIdentityResources()
+        {
+            return new List<IdentityResource>
+            {
+                new IdentityResources.OpenId(),
+                new IdentityResources.Profile(),
+            };
+        }
+
         public static IEnumerable<ApiResource> GetApiResources()
         {
             return new List<ApiResource>
@@ -52,7 +61,12 @@ namespace QuickstartIdentityServer
                 {
                     ClientId = "mvc",
                     ClientName = "MVC Client",
-                    AllowedGrantTypes = GrantTypes.Implicit,
+                    AllowedGrantTypes = GrantTypes.HybridAndClientCredentials,
+
+                    ClientSecrets =
+                    {
+                        new Secret("secret".Sha256())
+                    },
 
                     // where to redirect to after login
                     RedirectUris = { "http://localhost:5002/signin-oidc" },
@@ -63,10 +77,12 @@ namespace QuickstartIdentityServer
                     AllowedScopes = new List<string>
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
-                        IdentityServerConstants.StandardScopes.Profile
-                    }
+                        IdentityServerConstants.StandardScopes.Profile,
+                        "api1"
+                    },
+                    AllowOfflineAccess = true
                 }
-                    };
+            };
         }
 
         public static List<TestUser> GetUsers()
@@ -97,15 +113,6 @@ namespace QuickstartIdentityServer
                         new Claim("website", "https://bob.com")
                     }
                 }
-            };
-        }
-
-        public static IEnumerable<IdentityResource> GetIdentityResources()
-        {
-            return new List<IdentityResource>
-            {
-                new IdentityResources.OpenId(),
-                new IdentityResources.Profile(),
             };
         }
     }

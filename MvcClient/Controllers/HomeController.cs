@@ -1,5 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+using System.Net.Http;
+using IdentityModel.Client;
+using Microsoft.AspNetCore.Authentication;
 
 namespace MvcClient.Controllers
 {
@@ -11,23 +16,48 @@ namespace MvcClient.Controllers
             return View();
         }
 
-        public IActionResult About()
+        [Authorize]
+        public IActionResult Secure()
         {
-            ViewData["Message"] = "Your application description page.";
+            ViewData["Message"] = "Secure page.";
 
             return View();
         }
 
-        public IActionResult Contact()
+        public async Task Logout()
         {
-            ViewData["Message"] = "Your contact page.";
-
-            return View();
+            await HttpContext.Authentication.SignOutAsync("Cookies");
+            await HttpContext.Authentication.SignOutAsync("oidc");
         }
 
         public IActionResult Error()
         {
             return View();
+        }
+
+        public async Task<IActionResult> CallApiUsingClientCredentials()
+        {
+            var tokenClient = new TokenClient("http://localhost:5000/connect/token", "mvc", "secret");
+            var tokenResponse = await tokenClient.RequestClientCredentialsAsync("api1");
+
+            var client = new HttpClient();
+            client.SetBearerToken(tokenResponse.AccessToken);
+            var content = await client.GetStringAsync("http://localhost:5001/identity");
+
+            ViewBag.Json = JArray.Parse(content).ToString();
+            return View("json");
+        }
+
+        public async Task<IActionResult> CallApiUsingUserAccessToken()
+        {
+            var accessToken = await HttpContext.Authentication.GetTokenAsync("access_token");
+
+            var client = new HttpClient();
+            client.SetBearerToken(accessToken);
+            var content = await client.GetStringAsync("http://localhost:5001/identity");
+
+            ViewBag.Json = JArray.Parse(content).ToString();
+            return View("json");
         }
     }
 }
